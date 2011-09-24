@@ -1,4 +1,4 @@
-# Makefile for tenjer5
+# Makefile for tenjer
 
 DICTFILE=tenjer.tcdb
 

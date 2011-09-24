@@ -1,5 +1,9 @@
 #!/usr/bin/env python2
 # -*- coding: euc-jp -*-
+###
+###  tenjer.py
+###
+
 import sys, re, os.path
 from struct import pack, unpack
 from array import array
@@ -348,7 +352,7 @@ class Tenjer(object):
         ('*','16',u'カ'),
         ('+','346',u'ユ'),
         (',','6',u''),
-        ('-','36',u'()「」『』【】'),
+        ('-','36',u'()「」『』【】-'),
         ('.','46',u''),
         ('/','34',u'ヤ'),
         ('0','356',u'ン"'),
@@ -368,32 +372,32 @@ class Tenjer(object):
         ('>','345',u'ヨ'),
         ('?','1456',u'ス'),
         ('@','4',u''),
-        ('A','1',u'ア1'),
-        ('B','12',u'イ2'),
-        ('C','14',u'ウ3'),
-        ('D','145',u'ル4'),
-        ('E','15',u'ラ5'),
-        ('F','124',u'エ6'),
-        ('G','1245',u'レ7'),
-        ('H','125',u'リ8'),
-        ('I','24',u'オ9'),
-        ('J','245',u'ロ0'),
-        ('K','13',u'ナ'),
-        ('L','123',u'ニ'),
-        ('M','134',u'ヌ'),
-        ('N','1345',u'ツ'),
-        ('O','135',u'タ'),
-        ('P','1234',u'ネ'),
-        ('Q','12345',u'テ'),
-        ('R','1235',u'チ'),
-        ('S','234',u'ノ'),
-        ('T','2345',u'ト'),
-        ('U','136',u'ハ'),
-        ('V','1236',u'ヒ'),
-        ('W','2456',u'ソ'),
-        ('X','1346',u'フ'),
-        ('Y','13456',u'ム'),
-        ('Z','1356',u'マ'),
+        ('A','1',u'ア1A'),
+        ('B','12',u'イ2B'),
+        ('C','14',u'ウ3C'),
+        ('D','145',u'ル4D'),
+        ('E','15',u'ラ5E'),
+        ('F','124',u'エ6F'),
+        ('G','1245',u'レ7G'),
+        ('H','125',u'リ8H'),
+        ('I','24',u'オ9I'),
+        ('J','245',u'ロ0J'),
+        ('K','13',u'ナK'),
+        ('L','123',u'ニL'),
+        ('M','134',u'ヌM'),
+        ('N','1345',u'ツN'),
+        ('O','135',u'タO'),
+        ('P','1234',u'ネP'),
+        ('Q','12345',u'テQ'),
+        ('R','1235',u'チR'),
+        ('S','234',u'ノS'),
+        ('T','2345',u'トT'),
+        ('U','136',u'ハU'),
+        ('V','1236',u'ヒV'),
+        ('W','2456',u'ソW'),
+        ('X','1346',u'フX'),
+        ('Y','13456',u'ムY'),
+        ('Z','1356',u'マZ'),
         ('[','246',u'コ'),
         ('\\','1256',u'シ'),
         (']','12456',u'セ'),
@@ -445,13 +449,17 @@ class Tenjer(object):
     for (i1,i2,k) in (
         (0x0040, 0x005a, 1), # latin
         (0x0060, 0x007a, 1),
+        (0x002c, 0x002e, 1), 
+        (0x003a, 0x003b, 1), 
         (0x30a1, 0x30f4, 3), # kata
         (0x30fc, 0x30fc, 3), # kata
         (0x0030, 0x0039, 5), # digit
-        (0x002e, 0x002e, 5),
         ):
         for i in xrange(i1,i2+1):
             KIND[unichr(i)] = k
+    for c in (u'!?"([〈《「『【〔“（［\uff62'
+              u')]〉》」』】〕）\］uff63'):
+        KIND[c] = 3
     
     def tenji(self, chars):
         i = 0
@@ -506,7 +514,7 @@ class Tenjer(object):
         return i
 
     def _parse_digit(self, c, k, i):
-        if k == 5:
+        if k == 5 or c == '.':
             self._brl.append((c, self.TABLE.get(c)))
             return i+1
         elif k == 1 or k == 3:
@@ -533,17 +541,19 @@ def fold(words, width=40, sep=u' '):
 def main(argv):
     import getopt, fileinput
     def usage():
-        print 'usage: %s [-c codec] [-w width] [-D dictpath] [file ...]' % argv[0]
+        print 'usage: %s [-d] [-c codec] [-w width] [-D dictpath] [file ...]' % argv[0]
         return 100
     try:
-        (opts, args) = getopt.getopt(argv[1:], 'c:w:D:')
+        (opts, args) = getopt.getopt(argv[1:], 'dc:w:D:')
     except getopt.GetoptError:
         return usage()
+    debug = 0
     codec = 'utf-8'
-    width = 40
+    width = 32
     dictpath = None
     for (k, v) in opts:
-        if k == '-c': codec = v
+        if k == '-d': debug += 1
+        elif k == '-c': codec = v
         elif k == '-w': width = int(v)
         elif k == '-D': dictpath = v
     tenjer = Tenjer()
@@ -562,6 +572,8 @@ def main(argv):
             for (x,y) in tenjer.tenji(t):
                 a += x or u''
                 b += y or u''
+            if debug:
+                print '>', a
             r.append(b)
         for line in fold(r, width=width):
             print line
