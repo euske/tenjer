@@ -1,14 +1,21 @@
-簡易点訳システム tenjer.py
+簡易点訳エンジン tenjer.py
+新山祐介
+
+特徴:
+	Pythonのみで書かれている。
+	軽量 (辞書を含めても1.4MBytes)。
+	完全にオープンなライセンス (辞書はWnn用のpubdic+を利用している)。
 
 用意するもの:
 	Python v2.6以上 (Python3はサポートしない)
+	tenjer.py と tenjer.tcdb は同じディレクトリに置いておくこと。
 
 使い方:
 	$ python tenjer.py -w32 -c euc-jp README
 
 オプション:
-	-c codec : コーデック名を指定する。
-	-w width : 画面の折り返し幅を指定する。
+	-c codec : コーデック名を指定する。(デフォルトはutf-8)
+	-w width : 画面の折り返し幅を指定する。(デフォルトは32)
 	-D dictpath : 辞書(tenjer.tcdb)のパス名を指定する。
 	-d : デバッグレベルを上げる。
 
