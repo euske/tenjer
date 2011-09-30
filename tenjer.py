@@ -48,7 +48,7 @@ def zen2han(s):
 def decode_yomi(s):
     return u''.join( unichr(0x3000+ord(c)) for c in s )
 
-POST = { 0x306f:u'わ', 0x3078:u'え' }
+POST = { ord(u'は'):u'わ', ord(u'へ'):u'え' }
 EUPH = re.compile(ur'([オコゴソゾトドノホボポモヨロョォ])ウ')
 def reg_yomi(s):
     s = s[:-1]+(s[-1].translate(POST))
@@ -186,6 +186,34 @@ class Wakacher(object):
     #for c in u')]〉》」』】〕）\］uff63':
     #    KIND[c] = 7
 
+    POST1 = set(
+        [u'を', u'が', u'は',
+         u'で',u'では',u'でも',
+         u'に',u'には',u'にも',
+         # u'も',u'と',u'か'
+         u'の',u'のを',u'のが',u'のは',u'ので',u'のに',
+         u'のだ',u'のも',
+         ])
+
+    ADV1 = set(
+        [u'案外', u'以来', u'依然', u'一応', u'一切', u'一瞬', u'一足', u'一晩',
+         u'一律', u'各自', u'延々', u'何故', u'何卒', u'俄然', u'皆目', u'急遽',
+         u'極力', u'近々', u'今更', u'最早', u'至急', u'至極', u'時々', u'順次',
+         u'所詮', u'随分', u'折角', u'全然', u'早速', u'多分', u'大抵', u'大変',
+         u'大方', u'沢山', u'逐一', u'丁度', u'当然', u'到底', u'突如', u'別段',
+         u'本来', u'万一', u'無論', u'毛頭', u'勿論', u'以前', u'以後', u'以来',
+         u'以上', u'以降', u'昨日', u'昨年', u'近日', u'近年', u'偶然', u'結局',
+         u'結構', u'元来', u'後日', u'今頃', u'今後', u'今回', u'今日', u'今月',
+         u'今年', u'今週', u'今度', u'今晩', u'今夜', u'再度', u'最近', u'最初',
+         u'昨日', u'昨月', u'昨年', u'昨週', u'昨晩', u'昨夜', u'先程', u'先頃',
+         u'先日', u'先月', u'先年', u'先週', u'先晩', u'先夜', u'前回', u'前月',
+         u'全部', u'途中', u'当初', u'当日', u'当分', u'当面', u'日中', u'日頃',
+         u'日夜', u'年々', u'年中', u'本日', u'毎回', u'毎月', u'毎週', u'毎朝',
+         u'毎度', u'毎日', u'毎年', u'毎晩', u'明朝', u'明日', u'明晩', u'夜分',
+         u'翌月', u'翌朝', u'翌日', u'翌年', u'来月', u'来週', u'来年', u'例年',
+         u'連日',
+         ])
+
     def __init__(self):
         self.reset()
         return
@@ -231,19 +259,47 @@ class Wakacher(object):
             self._parse = self._parse_other
         return i
 
-    def _parse_tail(self, c, k, i):
-        if k == 2:
-            self._chunk += c
-            return i+1
-        self._parse = self._parse_other
-        return i
-
     def _parse_other(self, c, k, i):
         if k == 0:
             self._chunk += c
             return i+1
         self.flush()
         self._parse = self._parse_main
+        return i
+
+    def _parse_tail(self, c, k, i):
+        if k == 2:
+            # 「お願い」などの「お」は直前で切る。
+            if c == u'お':
+                self._parse = self._parse_tailo
+                return i+1
+            self._chunk += c
+            # 助詞がきたら切るかもしれない。
+            if c in self.POST1:
+                self._parse = self._parse_tail2
+            return i+1
+        self._parse = self._parse_other
+        return i
+
+    def _parse_tail2(self, c, k, i):
+        if k == 2:
+            # 助詞が続く場合。
+            if self._chunk[-1]+c in self.POST1:
+                self._parse = self._parse_tail
+                return i
+        # 助詞が終わったので切る。
+        self._parse = self._parse_other
+        return i
+
+    def _parse_tailo(self, c, k, i):
+        if k == 4:
+            # 「お+漢字」は「お」の前で切る。
+            self.flush()
+            self._chunk += u'お'
+            self._parse = self._parse_kanji
+            return i
+        self._chunk += u'お'
+        self._parse = self._parse_tail
         return i
 
     def _parse_latin(self, c, k, i):
@@ -262,6 +318,9 @@ class Wakacher(object):
         
     def _parse_kanji(self, c, k, i):
         if k == 4:
+            if self._chunk in self.ADV1:
+                self._parse = self._parse_other
+                return i
             self._chunk += c
             return i+1
         self._parse = self._parse_tail
@@ -517,7 +576,7 @@ class Tenjer(object):
         if k == 5 or c == '.':
             self._brl.append((c, self.TABLE.get(c)))
             return i+1
-        elif k == 1 or k == 3:
+        elif k == 3:
             self._brl.append((None, '_'))
         self._parse = self._parse_main
         return i
