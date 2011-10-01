@@ -61,8 +61,9 @@ def reg_yomi(s):
 ##
 class CDBReader(object):
 
-    def __init__(self, cdbname):
+    def __init__(self, cdbname, codec):
         self.name = cdbname
+        self.codec = codec
         self._fp = file(cdbname, 'rb')
         hash0 = decode(self._fp.read(2048))
         self._hash0 = [ (hash0[i], hash0[i+1]) for i in xrange(0, 512, 2) ]
@@ -80,7 +81,7 @@ class CDBReader(object):
         raise TypeError
 
     def __getitem__(self, k):
-        k = str(k)
+        k = k.encode(self.codec, 'ignore')
         h = cdbhash(k)
         h1 = h & 0xff
         (pos_bucket, ncells) = self._hash0[h1]
@@ -139,7 +140,7 @@ class TCDBReader(CDBReader):
         return r
 
     def lookup1(self, k, parent=0L):
-        k = str(k)
+        k = k.encode(self.codec, 'ignore')
         h = cdbhash(k, parent+5381L)
         self._fp.seek((h % 256) << 3)
         (pos_bucket, ncells) = unpack('<II', self._fp.read(8))
@@ -188,7 +189,7 @@ class Wakacher(object):
 
     POST1 = set(
         [u'を', u'が', u'は',
-         u'で',u'では',u'でも',
+         u'で',u'では',u'でも', u'での',
          u'に',u'には',u'にも',
          # u'も',u'と',u'か'
          u'の',u'のを',u'のが',u'のは',u'ので',u'のに',
@@ -214,7 +215,8 @@ class Wakacher(object):
          u'連日',
          ])
 
-    def __init__(self):
+    def __init__(self, tcdb):
+        self._tcdb = tcdb
         self.reset()
         return
     
@@ -345,11 +347,17 @@ class Wakacher(object):
 ##
 class Yomer(object):
 
-    def __init__(self, dictpath=None, codec='euc-jp'):
-        if dictpath is None:
-            dictpath = os.path.join(os.path.dirname(__file__), 'tenjer.tcdb')
-        self._tcdb = TCDBReader(dictpath)
-        self.codec = codec
+    DIGIT = {
+        u'年': u'ネン',
+        u'月': u'ガツ',
+        u'日': u'ニチ',
+        u'時': u'ジ',
+        u'人': u'ニン',
+        u'歳': u'サイ',
+        }
+
+    def __init__(self, tcdb):
+        self._tcdb = tcdb
         return
 
     def yome(self, s):
@@ -359,7 +367,7 @@ class Yomer(object):
         while i < len(s):
             c = s[i]
             try:
-                (v, p) = self._tcdb.lookup1(c.encode(self.codec, 'ignore'), p)
+                (v, p) = self._tcdb.lookup1(c, p)
                 i += 1
                 if v:
                     (y,i1) = (v,i)
@@ -606,21 +614,24 @@ def main(argv):
         print 'usage: %s [-d] [-c codec] [-w width] [-D dictpath] [file ...]' % argv[0]
         return 100
     try:
-        (opts, args) = getopt.getopt(argv[1:], 'dc:w:D:')
+        (opts, args) = getopt.getopt(argv[1:], 'dw:c:C:D:')
     except getopt.GetoptError:
         return usage()
     debug = 0
-    codec = 'utf-8'
     width = 32
-    dictpath = None
+    codec = 'utf-8'
+    dictcodec = 'euc-jp'
+    dictpath = os.path.join(os.path.dirname(__file__), 'tenjer.tcdb')
     for (k, v) in opts:
         if k == '-d': debug += 1
-        elif k == '-c': codec = v
         elif k == '-w': width = int(v)
+        elif k == '-c': codec = v
+        elif k == '-C': dictcodec = v
         elif k == '-D': dictpath = v
+    tcdb = TCDBReader(dictpath, dictcodec)
     tenjer = Tenjer()
-    yomer = Yomer(dictpath=dictpath)
-    wakacher = Wakacher()
+    yomer = Yomer(tcdb)
+    wakacher = Wakacher(tcdb)
     for line in fileinput.input(args):
         line = line.decode(codec, 'ignore')
         wakacher.feed(line)
