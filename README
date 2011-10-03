@@ -1,27 +1,27 @@
-�ʰ��������󥸥� tenjer.py
-����ʹ��
+簡易点訳エンジン tenjer.py
+新山祐介
 
-��ħ:
-	Python�Τߤǽ񤫤�Ƥ��롣
-	���� (�����ޤ�Ƥ�1.4MBytes)��
-	�����˥����ץ�ʥ饤���� (�����Wnn�Ѥ�pubdic+�����Ѥ��Ƥ���)��
+特徴:
+	Pythonのみで書かれている。
+	軽量 (辞書を含めても1.4MBytes)。
+	完全にオープンなライセンス (辞書はWnn用のpubdic+を利用している)。
 
-�Ѱդ�����:
-	Python v2.6�ʾ� (Python3�ϥ��ݡ��Ȥ��ʤ�)
-	tenjer.py �� tenjer.tcdb ��Ʊ���ǥ��쥯�ȥ���֤��Ƥ������ȡ�
+用意するもの:
+	Python v2.6以上 (Python3はサポートしない)
+	tenjer.py と tenjer.tcdb は同じディレクトリに置いておくこと。
 
-�Ȥ���:
+使い方:
 	$ python tenjer.py -w32 -c euc-jp README
 
-���ץ����:
-	-c codec : �����ǥå�̾����ꤹ�롣(�ǥե���Ȥ�utf-8)
-	-w width : ���̤��ޤ��֤�������ꤹ�롣(�ǥե���Ȥ�32)
-	-D dictpath : ����(tenjer.tcdb)�Υѥ�̾����ꤹ�롣
-	-d : �ǥХå���٥��夲�롣
+オプション:
+	-c codec : コーデック名を指定する。(デフォルトはutf-8)
+	-w width : 画面の折り返し幅を指定する。(デフォルトは32)
+	-D dictpath : 辞書(tenjer.tcdb)のパス名を指定する。
+	-d : デバッグレベルを上げる。
 
 TODO:
-	ʬ�����񤭤β�����
-	��ʸ����ʸ����ʸ������̤��ʤ���
-	�̾��������§�ˤʤ�ʸ���Ϥɤ�����?
-	�����䤬�����Ȥ��ε�§���褯�狼�äƤʤ���
-	��3ǯ�פʤɤ��3�ȥ��פ��Ѵ����롣
+	分かち書きの改善。
+	英文の大文字小文字を区別しない。
+	通常の点字規則にない文字はどうする?
+	外字符が終わるときの規則がよくわかってない。
+	「3年」などを「3トシ」と変換する。
