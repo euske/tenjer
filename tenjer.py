@@ -637,7 +637,7 @@ class Tenjer(object):
 
     def _parse_main(self, c, k, i):
         if k == 1:
-            self._brl.append((None,';'))
+            self._brl.append((None, ';'))
             self._parse = self._parse_latin
             return i
         elif k == 3:
@@ -645,7 +645,7 @@ class Tenjer(object):
             self._parse = self._parse_kata
             return i
         elif k == 5:
-            self._brl.append((None,'#'))
+            self._brl.append((None, '#'))
             self._parse = self._parse_digit
             return i
         else:
