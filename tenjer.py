@@ -188,22 +188,22 @@ class TCDBReader(CDBReader):
 class Wakacher(object):
 
     KIND = {}
-    for (i1,i2,k) in (
-        (0x0040, 0x005a, 1), # latin
-        (0x0060, 0x007a, 1),
-        (0xff21, 0xff3a, 1),
-        (0xff41, 0xff5a, 1),
-        (0x3041, 0x3093, 2), # hira
-        (0x30a1, 0x30f4, 3), # kata
-        (0x30fc, 0x30fc, 3), # kata
-        (0xff66, 0xff9f, 3),
-        (0x3005, 0x3007, 4), # kanji
-        (0x4e00, 0x9fff, 4), # kanji
-        (0x0030, 0x0039, 5), # digit
-        (0x002e, 0x002e, 5),
-        (0xff10, 0xff19, 5),
+    for (c,k) in (
+        (u'AZ', 1), # latin
+        (u'az', 1),
+        (u'£Á£Ú', 1),
+        (u'£á£ú', 1),
+        (u'¤¡¤ó', 2), # hira
+        (u'¥¡¥ô', 3), # kata
+        (u'¡¼¡¼', 3), # kata
+        (u'\uff66\uff9f', 3),
+        (u'\u3005\u3007', 4), # kanji
+        (u'\u4e00\u9fff', 4), # kanji
+        (u'09', 5), # digit
+        (u'..', 5),
+        (u'£°£¹', 5),
         ):
-        for i in xrange(i1,i2+1):
+        for i in xrange(ord(c[0]),ord(c[1])+1):
             KIND[unichr(i)] = k
     for c in u'"([¡Ò¡Ô¡Ö¡Ø¡Ú¡Ì¡È¡Ê¡Î\uff62':
         KIND[c] = 6
@@ -599,19 +599,20 @@ class Tenjer(object):
             TABLE[c] = b
     
     KIND = {}
-    for (i1,i2,k) in (
-        (0x0040, 0x005a, 1), # latin
-        (0x0060, 0x007a, 1),
-        (0x002c, 0x002e, 1), 
-        (0x003a, 0x003b, 1), 
-        (0x30a1, 0x30f4, 3), # kata
-        (0x30fc, 0x30fc, 3), # kata
-        (0x0030, 0x0039, 5), # digit
+    for (c,k) in (
+        (u'AZ', 1), # latin
+        (u'az', 1),
+        (u',.', 1),
+        (u':;', 1),
+        (u'¥¡¥ô', 3), # kata
+        (u'¡¼¡¼', 3), # kata
+        (u'09', 5), # digit
+        (u'..', 5),
         ):
-        for i in xrange(i1,i2+1):
+        for i in xrange(ord(c[0]),ord(c[1])+1):
             KIND[unichr(i)] = k
     for c in (u'!?"([¡Ò¡Ô¡Ö¡Ø¡Ú¡Ì¡È¡Ê¡Î\uff62'
-              u')]¡Ó¡Õ¡×¡Ù¡Û¡Í¡Ë¡Ï\uff63'):
+              u')]¡Ó¡Õ¡×¡Ù¡Û¡Í¡Ë¡Ï\uff63¡£¡¢'):
         KIND[c] = 3
     
     def get_brl(self, chars):
