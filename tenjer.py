@@ -389,7 +389,7 @@ class Wakacher(object):
 ##
 class Yomer(object):
 
-    DIGIT = {
+    UNIT = {
         u'年': u'ネン',
         u'月': u'ガツ',
         u'日': u'ニチ',
@@ -398,6 +398,14 @@ class Yomer(object):
         u'歳': u'サイ',
         }
 
+    KIND = {}
+    for (c,k) in (
+        (u'09', 5), # digit
+        (u'０９', 5),
+        ):
+        for i in xrange(ord(c[0]),ord(c[1])+1):
+            KIND[unichr(i)] = k
+            
     def __init__(self, tcdb):
         self._tcdb = tcdb
         self.reset()
@@ -415,7 +423,8 @@ class Yomer(object):
         i = 0
         while 0 <= i and i < len(chars):
             c = chars[i]
-            i = self._parse(c, i)
+            k = self.KIND.get(c, 0)
+            i = self._parse(c, k, i)
         return
 
     def get_yomi(self, chars):
@@ -447,7 +456,32 @@ class Yomer(object):
         self._yomi = None
         return
     
-    def _parse_main(self, c, i):
+    def _parse_main(self, c, k, i):
+        if k == 5:
+            self._parse = self._parse_digit
+        else:
+            self._parse = self._parse_other
+        return i
+
+    def _parse_digit(self, c, k, i):
+        if k != 5:
+            self._parse = self._parse_unit
+            return i
+        self._chunks.append((c, None))
+        return i+1
+    
+    def _parse_unit(self, c, k, i):
+        if c in self.UNIT:
+            self._chunks.append((c, self.UNIT[c]))
+            self._parse = self._parse_main
+            return i+1
+        self._parse = self._parse_main
+        return i
+    
+    def _parse_other(self, c, k, i):
+        if k == 5:
+            self._parse = self._parse_main
+            return i
         self._part += c
         try:
             (v, self._dstate) = self._tcdb.lookup1(c, self._dstate)
@@ -457,34 +491,6 @@ class Yomer(object):
             self._dstate = 0
             self._flush()
         return i+1
-    
-    def _get_yomi(self, s):
-        r = []
-        i = 0
-        (i0,i1,p,y) = (0,0,0L,None)
-        while i < len(s):
-            c = s[i]
-            try:
-                (v, p) = self._tcdb.lookup1(c, p)
-                i += 1
-                if v:
-                    (y,i1) = (v,i)
-                continue
-            except KeyError:
-                pass
-            if i0 < i1:
-                r.append((s[i0:i1], decode_yomi(y)))
-                i = i0 = i1
-            else:
-                r.append((c, None))
-                i += 1
-                i0 = i1 = i
-            (p,y) = (0L,None)
-        if y is not None:
-            r.append((s[i0:i1], decode_yomi(y)))
-        if i1 < len(s):
-            r.append((s[i1:], None))
-        return [a]
 
 
 ##  Tenjer
