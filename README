@@ -11,7 +11,7 @@
 	tenjer.py と tenjer.tcdb は同じディレクトリに置いておくこと。
 
 使い方:
-	$ python tenjer.py -w32 -c euc-jp README
+	$ python tenjer.py -w32 README
 
 オプション:
 	-c codec : コーデック名を指定する。(デフォルトはutf-8)
